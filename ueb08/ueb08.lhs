@@ -37,10 +37,18 @@ I: Arbeiten mit Maybe
         lookup 2 [(1,"hallo"),(2,"welt"),(4,"abc")]   ergibt   Just "welt"
         lookup 3 [(1,"hallo"),(2,"welt"),(4,"abc")]   ergibt   Nothing
 
+> lookup :: Eq a => a -> [(a, b)] -> Maybe b
+> lookup z [] = Nothing
+> lookup z (x:xs) 
+>               | (fst x) == z = Just (snd x)
+>               | otherwise = lookup z xs
 
    b) Schreibt sinnvolle Tests für eure lookup Funktion.
 
-
+> testLookUp = runTestTT ( "Uebung8.lookup == Prelude.lookup" ~: test testListe )
+> 	 where testListe = [ lookup z xs  ~?= Prelude.lookup z xs
+>       	           | z <- [2,3], xs <- [[(1,"hallo"),(2,"welt"),(4,"abc")], [(1,"hallo"),(2,"welt"),(4,"abc")]]
+>               	   ]
 
 
 II: Typdeklaration und eigene Datentypen
@@ -49,12 +57,12 @@ II: Typdeklaration und eigene Datentypen
 1) Was ist der grundlegende Unterschied zwischen "type" und "data"?
    (Wann sollte man "type" und wann "data" verwenden?)
 
-
+data allows you to introduce a new algebraic data type, while type just makes a type synonym.
 
 2) Der folgende Datentyp definiert eine Menge von Operationen:
 
 > data Op = ADD | MULT | SUB | DIV
->   deriving Eq
+>           deriving Eq
 
    "deriving Eq" generiert die nötigen Definitionen um einen Vergleich auf den
    Werten durchführen zu können.
@@ -65,15 +73,38 @@ II: Typdeklaration und eigene Datentypen
         calc MULT 2 3   ergibt   6
         calc SUB  5 3   ergibt   2
 
-
+> calc :: Op -> Int -> Int -> Int
+> calc ADD x y = x + y
+> calc MULT x y = x * y
+> calc SUB x y = x - y
+> calc DIV x y = div x y
 
    b) Wenn ihr Aufgabe a) mit Hilfe von Patternmatching gelöst hab,
       implementiert diese nun mit Guards, andernfalls jetzt mit Patternmatching.
 
-
+> calc2 :: Op -> Int -> Int -> Int
+> calc2 o x y
+>            | (o == ADD) = x + y
+>            | (o == MULT) = x * y
+>            | (o == SUB) = x - y
+>            | (o == DIV) = div x y
 
 Probiert auch einmal aus, was passiert wenn man oben die Zeile "deriving Eq" weg
 lässt.
+
+
+    No instance for (Eq Op) arising from a use of ‘==’
+    In the expression: (o == ADD)
+    In a stmt of a pattern guard for
+                   an equation for ‘calc2’:
+      (o == ADD)
+    In an equation for ‘calc2’:
+        calc2 o x y
+          | (o == ADD) = x + y
+          | (o == MULT) = x * y
+          | (o == SUB) = x - y
+          | (o == DIV) = div x y
+Failed, modules loaded: none.
 
 
 3) Der folgende Datentyp definiert eine Liste eines beliebigen Typs (mit der
@@ -106,13 +137,18 @@ a) Entwickelt eine Funktion "letztes" (inkl. der dazugehörigen Typsignatur), di
    das letzte Element einer (nicht leeren) Liste bestimmt (analog zu "last" für
    die normalen Listen).
 
+> letztes :: Liste a -> a
+> letztes (Element x Nichts) = x
+> letztes (Element x xs) = letztes xs   
 
 
 b) Entwickelt eine Funktion "summe" für Listen vom Typ Int, die die Summe aller
    Werte berechnet (analog zu "sum").
    Wie sieht hier die Typsignatur aus?
 
-
+> summe :: Num a => Liste a -> a
+> summe Nichts = 0
+> summe (Element x xs) = x +  (summe xs) 
 
 
 4) optionale Aufgabe: Bäume
@@ -140,6 +176,11 @@ b) Entwickelt eine Funktion "summe" für Listen vom Typ Int, die die Summe aller
    a) Überlegt euch zunächst (um damit testen zu können), wie der Beispielbaum
       in Haskellnotation definiert werden muss.
 
+ Knoten (Knoten (Blatt 1) (Blatt 2)) (Blatt 3)
 
    b) Definiert nun die Funktion "toList :: Baum a -> [a]"
 
+> toList :: Baum a -> [a]
+> toList (Blatt x) = [x]
+> toList (Knoten x y) = (toList x) ++ (toList y)  
+ 
